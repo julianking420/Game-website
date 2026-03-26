@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Games Hub PRO+ MAX</title>
+<style>
+body{margin:0;font-family:Arial;background:#020617;color:white}
+header{padding:20px;text-align:center;font-size:32px;font-weight:bold}
+.search{width:70%;margin:10px auto;display:block;padding:12px;border-radius:10px;border:none}
+.topbar{text-align:center;margin-bottom:10px}
+.topbar button{margin:5px;padding:10px;border:none;border-radius:8px;background:#1e293b;color:white;cursor:pointer}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;padding:20px}
+.card{background:#1e293b;border-radius:12px;overflow:hidden;cursor:pointer;transition:.2s}
+.card:hover{transform:scale(1.07)}
+.card img{width:100%;height:120px;object-fit:cover}
+.card p{padding:10px;margin:0}
+.viewer{padding:20px}
+iframe{width:100%;height:500px;border:none;border-radius:10px}
+canvas{background:black;border-radius:10px}
+.btn{display:inline-block;margin-top:10px;padding:12px;background:#38bdf8;color:black;text-decoration:none;border-radius:8px}
+</style>
+</head>
+<body>
+<header>Ultimate Games Hub PRO+ MAX 🎮</header>
+<input class="search" placeholder="Search games..." onkeyup="searchGames()">
+<div class="topbar">
+<button onclick="filterCategory('All')">All</button>
+<button onclick="filterCategory('Online')">Online</button>
+<button onclick="filterCategory('Built-in')">Built-in</button>
+<button onclick="showFavorites()">⭐ Favorites</button>
+<button onclick="recommendGames()">🔥 Recommended</button>
+</div>
+<div class="games" id="games"></div>
+<div class="viewer" id="viewer"></div>
+<script>
+const games=[
+// 🔥 BEST POPULAR GAMES
+{name:"Run 3",category:"Online",img:"https://img.utdstc.com/icon/1d6/run-3.png",url:"https://run3.io"},
+{name:"Slope",category:"Online",img:"https://play-lh.googleusercontent.com/V0z8M1.png",url:"https://slopegame.io"},
+{name:"Krunker",category:"Online",img:"https://krunker.io/favicon.ico",url:"https://krunker.io"},
+{name:"Shell Shockers",category:"Online",img:"https://shellshock.io/favicon.ico",url:"https://shellshock.io"},
+{name:"Subway Surfers",category:"Online",img:"https://subwaysurfersgame.io/favicon.ico",url:"https://subwaysurfersgame.io"},
+{name:"Temple Run 2",category:"Online",img:"https://templerun2.io/favicon.ico",url:"https://templerun2.io"},
+{name:"Paper.io",category:"Online",img:"https://paper-io.com/favicon.ico",url:"https://paper-io.com"},
+{name:"Agar.io",category:"Online",img:"https://agar.io/favicon.ico",url:"https://agar.io"},
+{name:"Slither.io",category:"Online",img:"https://slither.io/favicon.ico",url:"https://slither.io"},
+{name:"Zombs Royale",category:"Online",img:"https://zombsroyale.io/favicon.ico",url:"https://zombsroyale.io"},
+{name:"Smash Karts",category:"Online",img:"https://smashkarts.io/favicon.ico",url:"https://smashkarts.io"},
+{name:"Drift Hunters",category:"Online",img:"https://drifthunters.io/favicon.png",url:"https://drifthunters.io"},
+{name:"Moto X3M",category:"Online",img:"https://motox3m.co/favicon.ico",url:"https://motox3m.co"},
+{name:"Basketball Stars",category:"Online",img:"https://basketballstars.io/favicon.png",url:"https://basketballstars.io"},
+{name:"Tunnel Rush",category:"Online",img:"https://tunnelrush2.com/favicon.ico",url:"https://tunnelrush2.com"},
+{name:"Retro Bowl",category:"Online",img:"https://retrobowl.me/favicon.ico",url:"https://retrobowl.me"},
+{name:"Retro Goal",category:"Online",img:"https://retrobowl.me/favicon.ico",url:"https://retrogames.onl/retro-goal"},
+{name:"BitLife",category:"Online",img:"https://via.placeholder.com/150",url:"https://bitlifeonline.github.io"},
+{name:"Cookie Clicker",category:"Online",img:"https://orteil.dashnet.org/favicon.ico",url:"https://orteil.dashnet.org/cookieclicker/"},
+{name:"1v1.LOL",category:"Online",img:"https://1v1.lol/favicon.ico",url:"https://1v1.lol"},
+{name:"Vex 6",category:"Online",img:"https://vex6.io/favicon.ico",url:"https://vex6.io"},
+{name:"Vex 7",category:"Online",img:"https://vex7.io/favicon.ico",url:"https://vex7.io"},
+{name:"Fireboy & Watergirl",category:"Online",img:"https://fireboywatergirl.io/favicon.ico",url:"https://fireboywatergirl.io"},
+{name:"Stickman Hook",category:"Online",img:"https://stickmanhook.io/favicon.ico",url:"https://stickmanhook.io"},
+{name:"Helix Jump",category:"Online",img:"https://helixjump.io/favicon.ico",url:"https://helixjump.io"},
+{name:"Crossy Road",category:"Online",img:"https://crossyroad.io/favicon.ico",url:"https://crossyroad.io"},
+{name:"Cut The Rope",category:"Online",img:"https://cuttherope.net/favicon.ico",url:"https://cuttherope.net"},
+{name:"2048",category:"Online",img:"https://play2048.co/favicon.ico",url:"https://play2048.co"},
+{name:"Tetris",category:"Online",img:"https://tetris.com/favicon.ico",url:"https://tetris.com/play-tetris"},
+{name:"Pacman",category:"Online",img:"https://pacman.live/favicon.ico",url:"https://pacman.live"},
+
+// BUILT-IN
+{name:"Built-in Snake",category:"Built-in",img:"https://via.placeholder.com/150",type:"snake"},
+{name:"Built-in Clicker",category:"Built-in",img:"https://via.placeholder.com/150",type:"clicker"}
+];
+
+let current=games;
+let favorites=JSON.parse(localStorage.getItem('favorites'))||[];
+
+function display(list){
+const container=document.getElementById('games');
+container.innerHTML='';
+list.forEach(g=>{
+const fav=favorites.includes(g.name)?'⭐':'☆';
+const div=document.createElement('div');
+div.className='card';
+div.innerHTML=`<img src="${g.img}" onerror="this.src='https://via.placeholder.com/150'"><p>${g.name} <span onclick="toggleFav(event,'${g.name}')">${fav}</span></p>`;
+div.onclick=()=>loadGame(g);
+container.appendChild(div);
+});
+}
+
+function loadGame(game){
+if(game.type==='snake'){loadSnake();return}
+if(game.type==='clicker'){loadClicker();return}
+document.getElementById('viewer').innerHTML=`<h2>${game.name}</h2><iframe src="${game.url}"></iframe><br><a class="btn" href="${game.url}" target="_blank">Play Fullscreen</a>`;
+}
+
+function loadSnake(){
+document.getElementById('viewer').innerHTML=`<h2>Snake</h2><canvas id="snake" width="400" height="400"></canvas>`;
+const c=document.getElementById('snake');const ctx=c.getContext('2d');let s=[{x:200,y:200}],dx=20,dy=0,f={x:100,y:100};
+document.onkeydown=e=>{if(e.key==='ArrowUp'){dx=0;dy=-20}if(e.key==='ArrowDown'){dx=0;dy=20}if(e.key==='ArrowLeft'){dx=-20;dy=0}if(e.key==='ArrowRight'){dx=20;dy=0}};
+setInterval(()=>{ctx.fillRect(0,0,400,400);ctx.fillStyle='red';ctx.fillRect(f.x,f.y,20,20);let h={x:s[0].x+dx,y:s[0].y+dy};s.unshift(h);if(h.x===f.x&&h.y===f.y){f={x:Math.floor(Math.random()*20)*20,y:Math.floor(Math.random()*20)*20}}else{s.pop()}ctx.fillStyle='lime';s.forEach(p=>ctx.fillRect(p.x,p.y,20,20));},100);
+}
+
+function loadClicker(){document.getElementById('viewer').innerHTML=`<h2>Clicker</h2><p id="score">0</p><button onclick="clickGame()">Click</button>`;window.score=0}
+function clickGame(){score++;document.getElementById('score').innerText=score}
+
+function toggleFav(e,n){e.stopPropagation();favorites.includes(n)?favorites=favorites.filter(f=>f!==n):favorites.push(n);localStorage.setItem('favorites',JSON.stringify(favorites));display(current)}
+function showFavorites(){display(games.filter(g=>favorites.includes(g.name)))}
+function recommendGames(){display([...games].sort(()=>0.5-Math.random()).slice(0,8))}
+function searchGames(){const q=document.querySelector('.search').value.toLowerCase();display(current.filter(g=>g.name.toLowerCase().includes(q)))}
+function filterCategory(c){current=c==='All'?games:games.filter(g=>g.category===c);display(current)}
+
+window.onload=()=>display(games);
+</script>
+</body>
+</html>
